@@ -1,0 +1,438 @@
+DROP TABLE IF EXISTS `dept`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `dept` (
+  `deptno` int(2) NOT NULL,
+  `dname` varchar(14) default NULL,
+  `loc` varchar(13) default NULL,
+  PRIMARY KEY  (`deptno`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `dept`
+--
+
+LOCK TABLES `dept` WRITE;
+/*!40000 ALTER TABLE `dept` DISABLE KEYS */;
+INSERT INTO `dept` VALUES (10,'ACCOUNTING','NEW YORK'),(20,'RESEARCH','DALLAS'),(30,'SALES','CHICAGO'),(40,'OPERATIONS','BOSTON'),(50,'HR','SY'),(60,NULL,'MARKET');
+/*!40000 ALTER TABLE `dept` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `emp`
+--
+
+DROP TABLE IF EXISTS `emp`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `emp` (
+  `empno` int(4) NOT NULL,
+  `ename` varchar(20) default NULL,
+  `job` varchar(9) default NULL,
+  `mgr` int(4) default NULL,
+  `hiredate` date default NULL,
+  `sal` double(7,2) default NULL,
+  `comm` double(7,2) default NULL,
+  `deptno` int(2) default NULL,
+  PRIMARY KEY  (`empno`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `emp`
+--
+
+LOCK TABLES `emp` WRITE;
+/*!40000 ALTER TABLE `emp` DISABLE KEYS */;
+INSERT INTO `emp` VALUES (7369,'SMITH','CLERK',7902,'1980-12-17',800.00,NULL,20),(7499,'ALLEN','SALESMAN',7698,'1981-02-20',1600.00,300.00,30),(7521,'WARD','SALESMAN',7698,'1981-02-22',1250.00,500.00,30),(7566,'JONES','MANAGER',7839,'1981-04-02',2975.00,NULL,20),(7654,'MARTIN','SALESMAN',7698,'1981-09-28',1250.00,1400.00,30),(7698,'BLAKE','MANAGER',7839,'1981-05-01',2850.00,NULL,30),(7782,'CLARK','MANAGER',7839,'1981-06-09',2450.00,NULL,10),(7788,'SCOTT','ANALYST',7566,'1987-04-19',3000.00,NULL,20),(7839,'KING','PRESIDENT',NULL,'1981-11-17',5000.00,NULL,10),(7844,'TURNER','SALESMAN',7698,'1981-09-08',1500.00,0.00,30),(7876,'ADAMS','CLERK',7788,'1987-05-23',1100.00,NULL,20),(7900,'JAMES','CLERK',7698,'1981-12-03',950.00,NULL,30),(7902,'FORD','ANALYST',7566,'1981-12-03',3000.00,NULL,20),(7934,'MILLER','CLERK',7782,'1982-01-23',1300.00,NULL,10);
+/*!40000 ALTER TABLE `emp` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `salgrade`
+--
+
+DROP TABLE IF EXISTS `salgrade`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `salgrade` (
+  `grade` int(11) default NULL,
+  `losal` int(11) default NULL,
+  `hisal` int(11) default NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `salgrade`
+--
+
+LOCK TABLES `salgrade` WRITE;
+/*!40000 ALTER TABLE `salgrade` DISABLE KEYS */;
+INSERT INTO `salgrade` VALUES (1,700,1200),(2,1201,1400),(3,1401,2000),(4,2001,3000),(5,3001,9999);
+/*!40000 ALTER TABLE `salgrade` ENABLE KEYS */;
+UNLOCK TABLES;
+
+
+
+
+
+
+
+1.取得每个部门最高薪水的人员名称
+ename	deptno	s
+BLAKE	30	2850.00
+SCOTT	20	3000.00
+KING	10	5000.00
+FORD	20	3000.00
+
+select ename ,e.deptno,e.s
+from emp
+right join 
+(select deptno, max(sal) s
+from emp 
+group by deptno) e on e.s = emp.sal
+
+2.哪些人的薪水在部门的平均薪水之上
+ename	sal	deptno	s
+ALLEN	1600.00	30	1566.666667
+JONES	2975.00	20	2175.000000
+BLAKE	2850.00	30	1566.666667
+SCOTT	3000.00	20	2175.000000
+KING	5000.00	10	2916.666667
+FORD	3000.00	20	2175.000000
+
+select ename ,sal ,e.deptno,e.s
+from emp
+left join 
+(select deptno, avg(sal) s
+from emp 
+group by deptno) e on e.deptno = emp.deptno
+where emp.sal > e.s
+
+3.取得部门中(所有人)平均薪水的等级
+deptno	s	grade
+10	2916.666667	4
+20	2175.000000	4
+30	1566.666667	3
+
+select e.deptno,e.s, grade
+from salgrade sl
+join
+(select deptno, avg(sal) s
+from emp 
+group by deptno) e on e.s between sl.losal and sl.hisal
+
+4.取得部门中(所有人)薪水的平均等级
+deptno	avg(grade)
+10	3.6667
+20	2.8000
+30	2.5000
+
+select e.deptno, avg(grade)
+from salgrade sl
+join emp e on e.sal between sl.losal and sl.hisal
+group by e.deptno
+
+5.不用组函数(MAX),取得最高薪水(给出两种解决方案)
+empno	ename	job	mgr	hiredate	sal	comm	deptno
+7839	KING	PRESIDENT	NULL	1981-11-17	5000.00	NULL	10
+
+
+select *
+from emp
+order by sal desc limit 1
+
+select sal from emp where sal not in(select a.sal from emp a join emp b on a.sal < b.sal);
+
+6.取得平均薪水最高的部门的编号(至少给出两种解决方案)
+deptno	x
+10	2916.666667
+
+
+select deptno,avg(sal) x
+from emp
+group by deptno
+order by x desc limit 1
+
+select
+  deptno,avg(sal) as avgsal
+from
+  emp
+group by
+    deptno
+having
+	avg(sal)=( select max(t.avgsal) from (select avg(sal) avgsal from emp group by deptno) t);
+
+7.取得平均薪水最高的部门的部门名称
+dname	x
+ACCOUNTING	2916.666667
+
+select dname,s.x
+from dept
+join (
+select deptno,avg(sal) x
+from emp
+group by deptno
+order by x desc limit 1 ) s on s.deptno = dept.deptno
+
+8.求平均薪水的等级最高的部门的部门名称
+dname	grade
+ACCOUNTING	4
+RESEARCH	4
+
+select dept.dname ,ax.grade
+from (
+select deptno, grade
+from salgrade sl
+join
+(select deptno, avg(sal) s
+from emp 
+group by deptno) e on e.s between sl.losal and sl.hisal
+) as ax
+join (
+select grade
+from salgrade sl
+join
+(select deptno, avg(sal) s
+from emp 
+group by deptno) e on e.s between sl.losal and sl.hisal
+order by grade desc limit 1
+) as axc on ax.grade = axc.grade
+join  dept on dept.deptno = ax.deptno;
+
+
+select
+  t.dname,t.avgsal,s.grade
+from
+  (select d.dname,avg(e.sal) as avgsal from emp e join dept d on e.deptno=d.deptno group by d.dname) t
+join
+  salgrade s
+on
+  t.avgsal between s.losal and s.hisal
+where
+  s.grade=(select
+max(s.grade)
+from
+(select avg(sal) as avgsal from emp  group by deptno) t
+join
+salgrade s
+on
+t.avgsal between s.losal and s.hisal)
+
+9.取得比普通员工的最高薪水还要高的领导人姓名
+ename	sal
+JONES	2975.00
+BLAKE	2850.00
+CLARK	2450.00
+SCOTT	3000.00
+KING	5000.00
+FORD	3000.00
+
+select ename,sal
+from emp
+join (
+select distinct mgr
+from emp
+where mgr is not null
+) emp1 on emp1.mgr = emp.empno
+where emp.sal > (
+select max(sal)
+from emp
+where empno not in (
+select distinct mgr
+from emp
+where mgr is not null
+)
+)
+
+10.MANAGER工资增加1.1倍，CLERK工资增加1.5倍，其他人不变
+case ... when ... then ... when ... then ... else ... end 类似于Java中的switch..case
+ename	sal	newsal
+SMITH	800.00	1200.00
+ALLEN	1600.00	1600.00
+WARD	1250.00	1250.00
+JONES	2975.00	3272.50
+MARTIN	1250.00	1250.00
+BLAKE	2850.00	3135.00
+CLARK	2450.00	2695.00
+SCOTT	3000.00	3000.00
+KING	5000.00	5000.00
+TURNER	1500.00	1500.00
+ADAMS	1100.00	1650.00
+JAMES	950.00	1425.00
+FORD	3000.00	3000.00
+MILLER	1300.00	1950.00
+
+select
+  ename,sal,(case job when 'MANAGER' then sal*1.1 when 'CLERK' then sal*1.5 else sal end) as newsal
+from
+  emp;
+
+11.取得每个薪水等级有多少员工
+grade	count(emp.ename)
+1	3
+2	3
+3	2
+4	5
+5	1
+
+select grade,count(emp.ename)
+from salgrade sl
+join emp on emp.sal between sl.losal and sl.hisal
+group by grade
+
+12.列出受雇日期早于其直接上级领导的所有员工编号，姓名、部门名称
+empno	ename	dname
+7369	SMITH	RESEARCH
+7499	ALLEN	SALES
+7521	WARD	SALES
+7566	JONES	RESEARCH
+7698	BLAKE	SALES
+7782	CLARK	ACCOUNTING
+
+select e1.empno,e1.ename,dname
+from emp e1
+right join emp e2 on e2.empno = e1.mgr and e1.hiredate<e2.hiredate
+join dept on e1.deptno = dept.deptno
+
+13.列出部门名称和这些员工信息同时列出那些没有员工的部门
+deptno	dname	ename
+60	NULL	NULL
+10	ACCOUNTING	KING
+10	ACCOUNTING	CLARK
+10	ACCOUNTING	MILLER
+50	HR	NULL
+40	OPERATIONS	NULL
+20	RESEARCH	JONES
+20	RESEARCH	ADAMS
+20	RESEARCH	SMITH
+20	RESEARCH	SCOTT
+20	RESEARCH	FORD
+30	SALES	ALLEN
+30	SALES	MARTIN
+30	SALES	JAMES
+30	SALES	WARD
+30	SALES	TURNER
+30	SALES	BLAKE
+
+select dept.deptno, dname,e1.ename
+from emp e1
+right join dept on e1.deptno = dept.deptno
+order by dname
+
+14.列出至少有五个员工的部门详细信息
+deptno	dname	loc	count(e1.empno)
+20	RESEARCH	DALLAS	5
+30	SALES	CHICAGO	6
+
+select dept.deptno,dept.dname,dept.loc,count(e1.empno)
+from emp e1
+join dept on e1.deptno = dept.deptno
+group by dept.deptno,dept.dname,dept.loc
+having count(e1.empno) >= 5
+order by dname
+
+15.列出所有“CLERK”(办事员)的姓名及其部门名称，部门人数
+ename	dname	totalEmp
+SMITH	RESEARCH	5
+ADAMS	RESEARCH	5
+JAMES	SALES	6
+MILLER	ACCOUNTING	3
+
+select
+  e.ename,d.dname,t.totalEmp
+from
+  dept d
+join
+  emp e
+on
+  e.deptno=d.deptno
+join
+  (select deptno,count(*) as totalEmp from emp group by deptno)  t
+on
+  t.deptno=d.deptno
+where
+  e.job='CLERK';
+
+16.列出最低薪金大于1500的各种工作及从事此工作的全部雇员人数
+job	min(sal)	totalEmp
+ANALYST	3000.00	2
+MANAGER	2450.00	3
+PRESIDENT	5000.00	1
+
+select job,min(sal),count(*) as totalEmp from emp group by job having min(sal)>1500;
+
+17.列出部门在“SALES”<销售部>工作的姓名
+ename
+ALLEN
+WARD
+MARTIN
+BLAKE
+TURNER
+JAMES
+
+select ename
+from emp
+join dept on dept.deptno = emp.deptno and dept.dname = 'SALES'
+
+18.列出薪金高于公司平均薪金的所有员工、所在的部门、上级领导、雇员的工资等级
+ename	dname	ename	grade
+JONES	RESEARCH	KING	4
+BLAKE	SALES	KING	4
+CLARK	ACCOUNTING	KING	4
+SCOTT	RESEARCH	JONES	4
+KING	ACCOUNTING	NULL	5
+FORD	RESEARCH	JONES	4
+
+select e1.ename,dname,e2.ename,s.grade
+from emp e1
+left join emp e2 on e1.mgr = e2.empno
+join dept on dept.deptno = e1.deptno
+join salgrade s on e1.sal between s.losal and s.hisal
+where e1.sal>(select avg(sal) from emp)
+
+19.列出所有与“SCOTT”从事相同工作的所有员工及部门名称
+ename	job	dname
+FORD	ANALYST	RESEARCH
+
+select
+  e.ename,e.job,d.dname
+from
+  emp e
+join
+  dept d
+on
+  e.deptno=d.deptno
+where
+  e.job=(select job from emp where ename='SCOTT') and ename != 'SCOTT';
+
+20.列出每个部门工作的员工数量，平均工资、平均服务期限
+deptno	count(emp.empno)	ifnull(avg(emp.sal),0)	ifnull(avg((to_days(now()) - to_days(emp.hiredate))/365),0)
+10	3	2916.666667	36.18993333
+20	5	2175.000000	34.21698000
+30	6	1566.666667	36.48860000
+40	0	0.000000	0.00000000
+50	0	0.000000	0.00000000
+60	0	0.000000	0.00000000
+
+select dept.deptno,count(emp.empno),ifnull(avg(emp.sal),0),ifnull(avg((to_days(now()) - to_days(emp.hiredate))/365),0)
+from emp
+right join dept on dept.deptno = emp.deptno 
+group by dept.deptno
+
+21.列出各个部门MANAGER的最低薪金
+deptno	min(sal)
+10	2450.00
+20	2975.00
+30	2850.00
+40	NULL
+50	NULL
+60	NULL
+
+select dept.deptno,min(sal)
+from dept 
+left join emp on dept.deptno = emp.deptno and emp.job = 'MANAGER'
+group by dept.deptno
+
+

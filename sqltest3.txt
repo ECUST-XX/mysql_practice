@@ -1,0 +1,187 @@
+create table if not exists student  
+(  
+    SNO varchar(20) primary key,  
+    SNAME varchar(20) character set gbk,  
+    AGE int,  
+    SEX  char(2) character set gbk CHECK(SEX IN('男','女'))   
+);  
+insert into student values('1','李强',23,'男');  
+insert into student values('2','刘丽',22,'女');  
+insert into student values('5','张友',22,'男');  
+  
+create table if not exists course  
+(  
+    CNO varchar(20) primary key,  
+    CNAME varchar(20) character set gbk,  
+    TEACHER varchar(20) character set gbk  
+);  
+insert into course values('K1','C语言','王华');  
+insert into course values('K5','数据库原理','程军');  
+insert into course values('K8','编译原理','程军');  
+  
+create table if not exists sc  
+(  
+    SNO varchar(20) NOT NULL,  
+    CNO varchar(20) NOT NULL,  
+    SCORE int NOT NULL,  
+    primary key (SNO,CNO),  
+    foreign key (SNO) references student(SNO),  
+    foreign key (CNO) references course(CNO)  
+);  
+insert into sc values('1','K1',83);  
+insert into sc values('2','K1',85);  
+insert into sc values('5','K1',92);  
+insert into sc values('2','K5',90);  
+insert into sc values('5','K5',84);  
+insert into sc values('5','K8',80);  
+
+
+
+1.检索选修了“程军”老师所授全部课程的学生姓名
+sname
+张友
+
+select sname from student  
+where not exists  
+(  
+   select * from course  
+   where teacher='程军' and not exists  
+   (  
+       select * from sc   
+       where sc.sno=student.sno and sc.cno=course.cno  
+    )  
+);
+
+2. 检索＂李强＂同学不学课程的课程号(CNO)
+cno
+K5
+K8
+
+select course.cno
+from course
+where cno not in
+(  
+   select cno from sc  ,student
+   where sname='李强' and sc.sno = student.sno
+);
+
+3.检索选修不少于3门课程的学生学号(SNO)
+sno
+5
+
+SELECT sc.sno  
+FROM sc  
+GROUP BY sc.sno HAVING count(*)>=3;  
+
+4. 检索选修全部课程的学生姓名(SNAME)
+sname
+张友
+
+SELECT sname FROM student  
+WHERE NOT EXISTS  
+(  
+SELECT * FROM course  
+WHERE NOT EXISTS  
+    (  
+        SELECT * FROM sc  
+        WHERE course.cno=sc.cno and student.sno=sc.sno  
+    )  
+); 
+
+
+5.检索全部学生都选修的课程的课程号与课程名
+cno	cname
+K1	C语言
+
+SELECT course.cno,course.cname FROM course   
+WHERE course.cno IN  
+(  
+    SELECT cno FROM sc  
+    GROUP BY cno HAVing count(*)=(SELECT count(*) FROM student)  
+);  
+
+6.检索选修课程包含王老师所授课的学生学号
+sno
+1
+2
+5
+
+
+SELECT DISTINCT sno FROM sc  
+WHERE cno IN  
+(  
+    SELECT cno FROM course  
+    WHERE teacher LIKE '王%'  
+);  
+
+7.统计有学生选修的课程门数。
+NumberOfCourse
+3
+
+SELECT count(*)  NumberOfCourse  
+FROM   
+(  
+      SELECT DISTINCT cno FROM sc  
+) AS testTab;  
+
+8.求选修K1课程的学生的平均年龄
+AverageOfAge
+22.3333
+
+SELECT avg(age)
+FROM   student
+join sc on sc.sno = student.sno and sc.cno = 'k1'
+
+9.求王老师所授课程的每门课程的学生平均成绩
+cno	avg(score)
+K1	86.6667
+
+SELECT course.cno, avg(score)
+FROM   sc,course
+where  sc.cno = course.cno and teacher like '王%' 
+group by course.cno;
+
+SELECT sc.cno,AVG(sc.score)  
+FROM sc  
+WHERE sc.cno IN  
+(  
+SELECT course.cno FROM course  
+WHERE course.teacher LIKE '王%'  
+)  
+GROUP BY sc.cno;
+
+10.统计每门课程的学生选修人数（超过2人的课程才统计）。要求输出课程号和选修人数，查询结果按人数降序排列，若人数相同，按课程号升序排列。
+cno	al
+K1	3
+K5	2
+
+SELECT course.cno, count(sc.cno) al
+FROM   sc
+join course on sc.cno = course.cno
+group by course.cno
+having  count(sc.cno) > 1
+order by al desc ,cno asc;
+
+SELECT cno,Num  
+FROM   
+(  
+SELECT cno,count(*) as Num  
+FROM sc  
+GROUP BY cno HAVING (count(*) >= 2)  
+) tb_temp  
+ORDER BY Num DESC,cno ASC ;  
+
+11.
+sname	age
+李强	23
+
+SELECT sname,age FROM student  
+WHERE  
+sex='男' AND age > (  
+                      SELECT AVG(age)  
+                      FROM student  
+                      WHERE sex='女'  
+                   )  
+;  
+
+

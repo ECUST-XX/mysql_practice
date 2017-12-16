@@ -1,0 +1,239 @@
+CREATE  TABLE  student (
+id  INT(10)  NOT NULL  UNIQUE  PRIMARY KEY  ,
+name  VARCHAR(20)  NOT NULL ,
+sex  VARCHAR(4)  ,
+birth  YEAR,
+department  VARCHAR(20) ,
+address  VARCHAR(50) 
+);
+
+CREATE  TABLE  score (
+id  INT(10)  NOT NULL  UNIQUE  PRIMARY KEY  AUTO_INCREMENT ,
+stu_id  INT(10)  NOT NULL ,
+c_name  VARCHAR(20) ,
+grade  INT(10)
+);
+
+ 
+
+INSERT INTO student VALUES( 901,'张老大', '男',1985,'计算机系', '北京市海淀区');
+INSERT INTO student VALUES( 902,'张老二', '男',1986,'中文系', '北京市昌平区');
+INSERT INTO student VALUES( 903,'张三', '女',1990,'中文系', '湖南省永州市');
+INSERT INTO student VALUES( 904,'李四', '男',1990,'英语系', '辽宁省阜新市');
+INSERT INTO student VALUES( 905,'王五', '女',1991,'英语系', '福建省厦门市');
+INSERT INTO student VALUES( 906,'王六', '男',1988,'计算机系', '湖南省衡阳市');
+
+INSERT INTO score VALUES(NULL,901, '计算机',98);
+INSERT INTO score VALUES(NULL,901, '英语', 80);
+INSERT INTO score VALUES(NULL,902, '计算机',65);
+INSERT INTO score VALUES(NULL,902, '中文',88);
+INSERT INTO score VALUES(NULL,903, '中文',95);
+INSERT INTO score VALUES(NULL,904, '计算机',70);
+INSERT INTO score VALUES(NULL,904, '英语',92);
+INSERT INTO score VALUES(NULL,905, '英语',94);
+INSERT INTO score VALUES(NULL,906, '计算机',90);
+INSERT INTO score VALUES(NULL,906, '英语',85);
+
+
+
+
+1.查询student表的所有记录
+id	name	sex	birth	department	address
+901	张老大	男	1985	计算机系	北京市海淀区
+902	张老二	男	1986	中文系	北京市昌平区
+903	张三	女	1990	中文系	湖南省永州市
+904	李四	男	1990	英语系	辽宁省阜新市
+905	王五	女	1991	英语系	福建省厦门市
+906	王六	男	1988	计算机系	湖南省衡阳市
+
+SELECT * FROM student
+
+2.
+id	name	sex	birth	department	address
+902	张老二	男	1986	中文系	北京市昌平区
+903	张三	女	1990	中文系	湖南省永州市
+904	李四	男	1990	英语系	辽宁省阜新市
+
+select * 
+from student
+limit 1,3
+
+3.从student表查询所有学生的学号（id）姓名（name）和院系（department）的信息
+id	name	department
+901	张老大	计算机系
+902	张老二	中文系
+903	张三	中文系
+904	李四	英语系
+905	王五	英语系
+906	王六	计算机系
+
+select id, name ,  department
+from student
+
+4.从student表中查询计算机系和英语系的学生的信息
+id	name	sex	birth	department	address
+901	张老大	男	1985	计算机系	北京市海淀区
+904	李四	男	1990	英语系	辽宁省阜新市
+905	王五	女	1991	英语系	福建省厦门市
+906	王六	男	1988	计算机系	湖南省衡阳市
+
+select *  
+from student
+where department in ('英语系','计算机系')
+
+5.从student表中查询年龄18~22岁的学生信息
+id	name	sex	birth	department	address
+903	张三	女	1990	中文系	湖南省永州市
+904	李四	男	1990	英语系	辽宁省阜新市
+905	王五	女	1991	英语系	福建省厦门市
+906	王六	男	1988	计算机系	湖南省衡阳市
+
+select *  
+from student
+where (2017-birth) between 22 and 30
+
+6.从student表中查询每个院系有多少人 
+department	count(department)
+中文系	2
+英语系	2
+计算机系	2
+
+select department ,count(department)  
+from student
+group by department
+
+7.从score表中查询每个科目的最高分
+c_name	max(grade)
+中文	95
+英语	94
+计算机	98
+
+select c_name,max(grade)  
+from score
+group by c_name
+
+8.查询李四的考试科目（c_name）和考试成绩（grade）
+name	c_name	grade
+李四	计算机	70
+李四	英语	92
+
+select s.name, sc.c_name,sc.grade
+from score sc
+left join student s on s.id = sc.stu_id
+where s.name = '李四'
+
+9.用连接的方式查询所有学生的信息和考试信息
+id	name	sex	birth	department	address	id	stu_id	c_name	grade
+901	张老大	男	1985	计算机系	北京市海淀区	1	901	计算机	98
+901	张老大	男	1985	计算机系	北京市海淀区	2	901	英语	80
+902	张老二	男	1986	中文系	北京市昌平区	3	902	计算机	65
+902	张老二	男	1986	中文系	北京市昌平区	4	902	中文	88
+903	张三	女	1990	中文系	湖南省永州市	5	903	中文	95
+904	李四	男	1990	英语系	辽宁省阜新市	6	904	计算机	70
+904	李四	男	1990	英语系	辽宁省阜新市	7	904	英语	92
+905	王五	女	1991	英语系	福建省厦门市	8	905	英语	94
+906	王六	男	1988	计算机系	湖南省衡阳市	9	906	计算机	90
+906	王六	男	1988	计算机系	湖南省衡阳市	10	906	英语	85
+
+select s.*, sc.*
+from score sc
+join student s on s.id = sc.stu_id
+
+10.计算每个学生的总成绩
+stu_id	name	sum(grade)
+901	张老大	178
+902	张老二	153
+903	张三	95
+904	李四	162
+905	王五	94
+906	王六	175
+
+select  sc.stu_id,s.name, sum(grade)
+from score sc
+join student s on s.id = sc.stu_id
+group by sc.stu_id
+
+11.计算每个考试科目的平均成绩
+c_name	avg(grade)
+中文	91.5000
+英语	87.7500
+计算机	80.7500
+
+select  sc.c_name, avg(grade)
+from score sc
+group by sc.c_name
+
+12.查询计算机成绩低于95的学生信息
+id	name	sex	birth	department	address
+902	张老二	男	1986	中文系	北京市昌平区
+904	李四	男	1990	英语系	辽宁省阜新市
+906	王六	男	1988	计算机系	湖南省衡阳市
+
+select  s.*
+from student s
+left join score sc on sc.stu_id = s.id
+where sc.c_name = '计算机' and sc.grade < 95
+
+13.查询同时参加计算机和英语考试的学生的信息
+id	name	sex	birth	department	address	c_name	c_name
+901	张老大	男	1985	计算机系	北京市海淀区	计算机	英语
+904	李四	男	1990	英语系	辽宁省阜新市	计算机	英语
+906	王六	男	1988	计算机系	湖南省衡阳市	计算机	英语
+
+select  s.*, sc.c_name, scc.c_name
+from student s
+join score sc on sc.stu_id = s.id and sc.c_name = '计算机'
+join score scc on scc.stu_id = s.id and scc.c_name = '英语'
+
+14.将计算机考试成绩按从高到低进行排序
+stu_id	c_name	grade
+901	计算机	98
+906	计算机	90
+904	计算机	70
+902	计算机	65
+
+select  sc.stu_id, sc.c_name, sc.grade
+from score sc
+where sc.c_name = '计算机'
+order by sc.grade desc
+
+15.从student表和score表中查询出学生的学号，然后合并查询结果
+id
+901
+902
+903
+904
+905
+906
+
+SELECT id  FROM student
+UNION
+SELECT stu_id  FROM score;
+
+16.查询姓张或者姓王的同学的姓名、院系和考试科目及成绩
+name	department	c_name	grade
+张老大	计算机系	计算机	98
+张老大	计算机系	英语	80
+张老二	中文系	计算机	65
+张老二	中文系	中文	88
+张三	中文系	中文	95
+王五	英语系	英语	94
+王六	计算机系	计算机	90
+王六	计算机系	英语	85
+
+select s.name, s.department, sc.c_name, sc.grade
+from student s 
+join score sc on sc.stu_id = s.id
+where s.name like '王%' or s.name like '张%'
+
+17.查询都是湖南的学生的姓名、年龄、院系和考试科目及成绩
+name	age	department	c_name	grade
+张三	27	中文系	中文	95
+王六	29	计算机系	计算机	90
+王六	29	计算机系	英语	85
+
+select s.name, 2017-s.birth age, s.department, sc.c_name, sc.grade
+from student s 
+join score sc on sc.stu_id = s.id
+where s.address like '湖南%'
+
